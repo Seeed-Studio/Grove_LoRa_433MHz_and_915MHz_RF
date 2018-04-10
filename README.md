@@ -15,6 +15,8 @@ The library for [Grove - Lora 433MHz](https://www.seeedstudio.com/Grove-LoRa-Rad
 Note:
 This is a hardware LoRa RF module that without LoRaWAN class protocol.
 
+For more information please visit [wiki](http://wiki.seeedstudio.com/Grove_LoRa_Radio/).
+
 ------
 This software is licensed under [The MIT License](http://opensource.org/licenses/mit-license.php). Check License.txt for more information.<br>
 
