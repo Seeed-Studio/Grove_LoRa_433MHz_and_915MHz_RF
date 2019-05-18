@@ -14,7 +14,7 @@ PROGMEM static const RH_RF95::ModemConfig MODEM_CONFIG_TABLE[] =
     
 };
 
-RH_RF95::RH_RF95(SoftwareSerial& ss)
+RH_RF95::RH_RF95(HardwareSerial& ss)
     :
     RHUartDriver(ss),
     _rxBufValid(0)
