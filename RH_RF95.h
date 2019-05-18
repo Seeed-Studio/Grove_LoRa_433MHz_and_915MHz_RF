@@ -235,7 +235,7 @@ public:
         Bw125Cr48Sf4096,           ///< Bw = 125 kHz, Cr = 4/8, Sf = 4096chips/symbol, CRC on. Slow+long range
     } ModemConfigChoice;
 
-    RH_RF95(SoftwareSerial& ss);
+    RH_RF95(HardwareSerial& ss);
   
     /// Initialise the Driver transport hardware and software.
     /// Make sure the Driver is properly configured before calling init().
