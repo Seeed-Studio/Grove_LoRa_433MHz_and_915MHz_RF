@@ -46,7 +46,7 @@ class RHUartDriver : public RHGenericDriver
 {
 public:
 
-    RHUartDriver(SoftwareSerial& ss);
+    RHUartDriver(HardwareSerial& ss);
     
     virtual bool init();
     
@@ -70,7 +70,7 @@ public:
 
 protected:
 
-    SoftwareSerial& _ss;
+    HardwareSerial& _ss;
 
 private:
 
