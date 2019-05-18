@@ -31,7 +31,7 @@
 #include <RHUartDriver.h>
 
 
-RHUartDriver::RHUartDriver(SoftwareSerial& ss)
+RHUartDriver::RHUartDriver(HardwareSerial& ss)
     :
     _ss(ss)
 {
