@@ -40,7 +40,7 @@ RHUartDriver::RHUartDriver(HardwareSerial& ss)
 bool RHUartDriver::init()
 {
     _ss.begin(57600);
-    _ss.listen();
+    //_ss.listen();
     
     return true;
 }
