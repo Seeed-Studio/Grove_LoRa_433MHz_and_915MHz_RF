@@ -200,13 +200,6 @@
 #define RH_RF95_PA_DAC_DISABLE                        0x04
 #define RH_RF95_PA_DAC_ENABLE                         0x07
 
-
-    
-    
-class RH_RF95 : public RHUartDriver
-{
-public:
-
     /// Defines register values for a set of modem configuration registers
     /// that can be passed to setModemRegisters() if none of the choices in
     /// ModemConfigChoice suit your need setModemRegisters() writes the
@@ -218,6 +211,12 @@ public:
         uint8_t    reg_1e;   ///< Value for register RH_RF95_REG_1E_MODEM_CONFIG2
         uint8_t    reg_26;   ///< Value for register RH_RF95_REG_26_MODEM_CONFIG3
     } ModemConfig;
+    
+template<typename T>
+class RH_RF95 : public RHUartDriver<T>
+{
+public:
+
 
     /// Choices for setModemConfig() for a selected subset of common
     /// data rates. If you need another configuration,
@@ -235,7 +234,7 @@ public:
         Bw125Cr48Sf4096,           ///< Bw = 125 kHz, Cr = 4/8, Sf = 4096chips/symbol, CRC on. Slow+long range
     } ModemConfigChoice;
 
-    RH_RF95(SoftwareSerial& ss);
+    RH_RF95(T& ss);
   
     /// Initialise the Driver transport hardware and software.
     /// Make sure the Driver is properly configured before calling init().
