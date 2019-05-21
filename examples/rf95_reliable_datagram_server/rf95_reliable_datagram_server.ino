@@ -5,10 +5,30 @@
 // It is designed to work with the other example rf95_reliable_datagram_client
 // Tested with Anarduino MiniWirelessLoRa
 
-#include <SoftwareSerial.h>
 #include <RHReliableDatagram.h>
 #include <RH_RF95.h>
+#ifdef __AVR__
+#include <SoftwareSerial.h>
+SoftwareSerial SSerial(10, 11); // RX, TX
+#define COMSerial SSerial
+#define ShowSerial Serial 
 
+RH_RF95<SoftwareSerial> driver(COMSerial);
+#endif
+
+#ifdef ARDUINO_SAMD_VARIANT_COMPLIANCE
+#define COMSerial Serial1
+#define ShowSerial SerialUSB 
+
+RH_RF95<Uart> driver(COMSerial);
+#endif
+
+#ifdef ARDUINO_ARCH_STM32F4
+#define COMSerial Serial
+#define ShowSerial SerialUSB 
+
+RH_RF95<HardwareSerial> driver(COMSerial);
+#endif
 #define CLIENT_ADDRESS 1
 #define SERVER_ADDRESS 2
 
@@ -23,8 +43,8 @@ RHReliableDatagram manager(driver, SERVER_ADDRESS);
 
 void setup() 
 {
-  Serial.begin(115200);
-  if (!manager.init())Serial.println("init failed");
+  ShowSerial.begin(115200);
+  if (!manager.init())ShowSerial.println("init failed");
   
   // Defaults after init are 434.0MHz, 13dBm, Bw = 125 kHz, Cr = 4/5, Sf = 128chips/symbol, CRC on
 
@@ -48,14 +68,14 @@ void loop()
     
     if(manager.recvfromAck(buf, &len, &from))
     {
-      Serial.print("got request from : 0x");
-      Serial.print(from, HEX);
-      Serial.print(": ");
-      Serial.println((char*)buf);
+      ShowSerial.print("got request from : 0x");
+      ShowSerial.print(from, HEX);
+      ShowSerial.print(": ");
+      ShowSerial.println((char*)buf);
 
       // Send a reply back to the originator client
       if(!manager.sendtoWait(data, sizeof(data), from))
-        Serial.println("sendtoWait failed");
+        ShowSerial.println("sendtoWait failed");
     }
   }
 }

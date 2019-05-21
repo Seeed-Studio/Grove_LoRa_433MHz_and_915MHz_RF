@@ -9,27 +9,44 @@
 
 
 
-#include <SoftwareSerial.h>
 #include <RH_RF95.h>
+#ifdef __AVR__
+#include <SoftwareSerial.h>
+SoftwareSerial SSerial(10, 11); // RX, TX
+#define COMSerial SSerial
+#define ShowSerial Serial 
 
+RH_RF95<SoftwareSerial> rf95(COMSerial);
+#endif
 
-// Singleton instance of the radio driver
-SoftwareSerial ss(5, 6);
-RH_RF95 rf95(ss);
+#ifdef ARDUINO_SAMD_VARIANT_COMPLIANCE
+#define COMSerial Serial1
+#define ShowSerial SerialUSB 
+
+RH_RF95<Uart> rf95(COMSerial);
+#endif
+
+#ifdef ARDUINO_ARCH_STM32F4
+#define COMSerial Serial
+#define ShowSerial SerialUSB 
+
+RH_RF95<HardwareSerial> rf95(COMSerial);
+#endif
+
 
 int led = 13;
 
 
 void setup() 
 {
-    Serial.begin(115200);
-    Serial.println("RF95 server test.");
+    ShowSerial.begin(115200);
+    ShowSerial.println("RF95 server test.");
     
     pinMode(led, OUTPUT); 
     
     if(!rf95.init())
     {
-        Serial.println("init failed");
+        ShowSerial.println("init failed");
         while(1);
     } 
     // Defaults after init are 434.0MHz, 13dBm, Bw = 125 kHz, Cr = 4/5, Sf = 128chips/symbol, CRC on
@@ -53,20 +70,20 @@ void loop()
     {
         digitalWrite(led, HIGH);
         
-        Serial.print("got request: ");
-        Serial.println((char*)buf);
+        ShowSerial.print("got request: ");
+        ShowSerial.println((char*)buf);
         
         // Send a reply
         uint8_t data[] = "And hello back to you";
         rf95.send(data, sizeof(data));
         rf95.waitPacketSent();
-        Serial.println("Sent a reply");
+        ShowSerial.println("Sent a reply");
         
         digitalWrite(led, LOW);
     }
     else
     {
-        Serial.println("recv failed");
+        ShowSerial.println("recv failed");
     }
   }
 }

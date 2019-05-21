@@ -4,10 +4,30 @@
 // with the RHRouter class.
 // It is designed to work with the other examples rf95_router_address*
 
-#include <SoftwareSerial.h>
 #include <RHRouter.h>
 #include <RH_RF95.h>
+#ifdef __AVR__
+#include <SoftwareSerial.h>
+SoftwareSerial SSerial(10, 11); // RX, TX
+#define COMSerial SSerial
+#define ShowSerial Serial 
 
+RH_RF95<SoftwareSerial> driver(COMSerial);
+#endif
+
+#ifdef ARDUINO_SAMD_VARIANT_COMPLIANCE
+#define COMSerial Serial1
+#define ShowSerial SerialUSB 
+
+RH_RF95<Uart> driver(COMSerial);
+#endif
+
+#ifdef ARDUINO_ARCH_STM32F4
+#define COMSerial Serial
+#define ShowSerial SerialUSB 
+
+RH_RF95<HardwareSerial> driver(COMSerial);
+#endif
 // In this small artifical network of 4 nodes,
 // messages are routed via intermediate nodes to their destination
 // node. All nodes can act as routers
@@ -17,17 +37,15 @@
 #define ROUTER3_ADDRESS 3
 #define ROUTER4_ADDRESS 4
 
-// Singleton instance of the radio
-SoftwareSerial ss(10, 11);
-RH_RF95 driver(ss);
+
 
 // Class to manage message delivery and receipt, using the driver declared above
 RHRouter manager(driver, ROUTER1_ADDRESS);
 
 void setup() 
 {
-    Serial.begin(9600);
-    if(!manager.init())Serial.println("init failed");
+    ShowSerial.begin(9600);
+    if(!manager.init())ShowSerial.println("init failed");
     // Defaults after init are 434.0MHz, 0.05MHz AFC pull-in, modulation FSK_Rb2_4Fd36
 
     // Manually define the routes for this network
@@ -47,9 +65,9 @@ void loop()
     uint8_t len = sizeof(buf);
     uint8_t from;
     
-    if(Serial.available())
+    if(ShowSerial.available())
     {
-        addr = Serial.read();
+        addr = ShowSerial.read();
     }
     
     if(addr > '0' && addr <= '4')
@@ -58,8 +76,8 @@ void loop()
         // It will be routed by the intermediate
         // nodes to the destination node, accorinding to the
         // routing tables in each node
-        Serial.print("Send message to router ");
-        Serial.println(addr - '0');
+        ShowSerial.print("Send message to router ");
+        ShowSerial.println(addr - '0');
         if(manager.sendtoWait(data, sizeof(data), addr - '0') == RH_ROUTER_ERROR_NONE)
         {
             // It has been reliably delivered to the next node.
@@ -67,17 +85,17 @@ void loop()
             memset(buf, 0, len);
             if(manager.recvfromAckTimeout(buf, &len, 3000, &from))
             {
-                Serial.print("got reply from : 0x");
-                Serial.print(from, HEX);
-                Serial.print(": ");
-                Serial.println((char*)buf);
+                ShowSerial.print("got reply from : 0x");
+                ShowSerial.print(from, HEX);
+                ShowSerial.print(": ");
+                ShowSerial.println((char*)buf);
             }
             else
             {
-                Serial.println("No reply, are routers running?");
+                ShowSerial.println("No reply, are routers running?");
             }
         }
-        else Serial.println("sendtoWait failed. Are the intermediate routers running?");
+        else ShowSerial.println("sendtoWait failed. Are the intermediate routers running?");
 
         addr = 0;     
     }
@@ -85,13 +103,13 @@ void loop()
     memset(buf, 0, len);
     if(manager.recvfromAck(buf, &len, &from))
     {
-        Serial.print("got message from : 0x");
-        Serial.print(from, HEX);
-        Serial.print(": ");
-        Serial.println((char*)buf);
+        ShowSerial.print("got message from : 0x");
+        ShowSerial.print(from, HEX);
+        ShowSerial.print(": ");
+        ShowSerial.println((char*)buf);
         
         // Send a reply back to the originator router
         if(manager.sendtoWait(back, sizeof(back), from) != RH_ROUTER_ERROR_NONE)
-        Serial.println("sendtoWait failed");
+        ShowSerial.println("sendtoWait failed");
     }
 }

@@ -5,17 +5,35 @@
 // It is designed to work with the other example rf95_reliable_datagram_server
 // Tested with Anarduino MiniWirelessLoRa
 
-#include <SoftwareSerial.h>
 #include <RHReliableDatagram.h>
 #include <RH_RF95.h>
+#ifdef __AVR__
+#include <SoftwareSerial.h>
+SoftwareSerial SSerial(10, 11); // RX, TX
+#define COMSerial SSerial
+#define ShowSerial Serial 
 
+RH_RF95<SoftwareSerial> driver(COMSerial);
+#endif
+
+#ifdef ARDUINO_SAMD_VARIANT_COMPLIANCE
+#define COMSerial Serial1
+#define ShowSerial SerialUSB 
+
+RH_RF95<Uart> driver(COMSerial);
+#endif
+
+#ifdef ARDUINO_ARCH_STM32F4
+#define COMSerial Serial
+#define ShowSerial SerialUSB 
+
+RH_RF95<HardwareSerial> driver(COMSerial);
+#endif
 #define CLIENT_ADDRESS 1
 #define SERVER_ADDRESS 2
 
 
-// Singleton instance of the radio driver
-SoftwareSerial ss(10, 11);
-RH_RF95 driver(ss);
+
 
 // Class to manage message delivery and receipt, using the driver declared above
 RHReliableDatagram manager(driver, CLIENT_ADDRESS);
@@ -23,8 +41,8 @@ RHReliableDatagram manager(driver, CLIENT_ADDRESS);
 
 void setup() 
 {
-  Serial.begin(115200);
-  if (!manager.init())Serial.println("init failed");
+  ShowSerial.begin(115200);
+  if (!manager.init())ShowSerial.println("init failed");
   
   // Defaults after init are 434.0MHz, 13dBm, Bw = 125 kHz, Cr = 4/5, Sf = 128chips/symbol, CRC on
 
@@ -40,7 +58,7 @@ uint8_t buf[RH_RF95_MAX_MESSAGE_LEN];
 
 void loop()
 {
-  Serial.println("Sending to rf95_reliable_datagram_server");
+  ShowSerial.println("Sending to rf95_reliable_datagram_server");
   
   // Send a message to manager_server
   if(manager.sendtoWait(data, sizeof(data), SERVER_ADDRESS))
@@ -51,18 +69,18 @@ void loop()
     
     if(manager.recvfromAckTimeout(buf, &len, 2000, &from))
     {
-      Serial.print("got reply from : 0x");
-      Serial.print(from, HEX);
-      Serial.print(": ");
-      Serial.println((char*)buf);
+      ShowSerial.print("got reply from : 0x");
+      ShowSerial.print(from, HEX);
+      ShowSerial.print(": ");
+      ShowSerial.println((char*)buf);
     }
     else
     {
-      Serial.println("No reply, is rf95_reliable_datagram_server running?");
+      ShowSerial.println("No reply, is rf95_reliable_datagram_server running?");
     }
   }
   else
-    Serial.println("sendtoWait failed");
+    ShowSerial.println("sendtoWait failed");
   
   delay(500);
 }

@@ -7,23 +7,42 @@
 // It is designed to work with the other example rf95_server
 // Tested with Anarduino MiniWirelessLoRa
 
-#include <SoftwareSerial.h>
 #include <RH_RF95.h>
 
+#ifdef __AVR__
+#include <SoftwareSerial.h>
+SoftwareSerial SSerial(5, 6); // RX, TX
+#define COMSerial SSerial
+#define ShowSerial Serial 
 
-// Singleton instance of the radio driver
-SoftwareSerial ss(5, 6);
-RH_RF95 rf95(ss);
+RH_RF95<SoftwareSerial> rf95(COMSerial);
+#endif
+
+#ifdef ARDUINO_SAMD_VARIANT_COMPLIANCE
+#define COMSerial Serial1
+#define ShowSerial SerialUSB 
+
+RH_RF95<Uart> rf95(COMSerial);
+#endif
+
+#ifdef ARDUINO_ARCH_STM32F4
+#define COMSerial Serial
+#define ShowSerial SerialUSB 
+
+RH_RF95<HardwareSerial> rf95(COMSerial);
+#endif
+
+
 
 
 void setup() 
 {
-    Serial.begin(115200);
-    Serial.println("RF95 client test.");
+    ShowSerial.begin(115200);
+    ShowSerial.println("RF95 client test.");
 
     if (!rf95.init())
     {
-        Serial.println("init failed");
+        ShowSerial.println("init failed");
         while(1);
     }
 
@@ -39,7 +58,7 @@ void setup()
 
 void loop()
 {
-    Serial.println("Sending to rf95_server");
+    ShowSerial.println("Sending to rf95_server");
     // Send a message to rf95_server
     uint8_t data[] = "Hello World!";
     rf95.send(data, sizeof(data));
@@ -55,17 +74,17 @@ void loop()
         // Should be a reply message for us now   
         if(rf95.recv(buf, &len))
         {
-            Serial.print("got reply: ");
-            Serial.println((char*)buf);
+            ShowSerial.print("got reply: ");
+            ShowSerial.println((char*)buf);
         }
         else
         {
-            Serial.println("recv failed");
+            ShowSerial.println("recv failed");
         }
     }
     else
     {
-        Serial.println("No reply, is rf95_server running?");
+        ShowSerial.println("No reply, is rf95_server running?");
     }
     
     delay(1000);

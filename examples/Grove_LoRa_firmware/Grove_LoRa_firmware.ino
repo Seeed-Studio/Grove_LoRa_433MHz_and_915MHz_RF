@@ -1,7 +1,8 @@
 
 #include <SPI.h>
+#ifdef __AVR__
 #include <SoftwareSerial.h>
-
+#endif
 
 #define DIO0_INT 0 // INT0, D2.
 #define DIO1_INT 1 // INT1, D3.
