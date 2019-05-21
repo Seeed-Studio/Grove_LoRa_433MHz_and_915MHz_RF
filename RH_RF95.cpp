@@ -28,21 +28,21 @@ bool RH_RF95<T>::init()
     RHUartDriver<T>::init();
     
     // Set sleep mode, so we can also set LORA mode:
-    write(RH_RF95_REG_01_OP_MODE, RH_RF95_MODE_SLEEP | RH_RF95_LONG_RANGE_MODE);
+    this->write(RH_RF95_REG_01_OP_MODE, RH_RF95_MODE_SLEEP | RH_RF95_LONG_RANGE_MODE);
     delay(10); // Wait for sleep mode to take over from say, CAD
     
     // Check we are in sleep mode, with LORA set
-    if (read(RH_RF95_REG_01_OP_MODE) != (RH_RF95_MODE_SLEEP | RH_RF95_LONG_RANGE_MODE))
+    if (this->read(RH_RF95_REG_01_OP_MODE) != (RH_RF95_MODE_SLEEP | RH_RF95_LONG_RANGE_MODE))
     {
-        Serial.println(read(RH_RF95_REG_01_OP_MODE), HEX);
+        Serial.println(this->read(RH_RF95_REG_01_OP_MODE), HEX);
         return false; // No device present?
     }
 
     // Set up FIFO
     // We configure so that we can use the entire 256 byte FIFO for either receive
     // or transmit, but not both at the same time
-    write(RH_RF95_REG_0E_FIFO_TX_BASE_ADDR, 0);
-    write(RH_RF95_REG_0F_FIFO_RX_BASE_ADDR, 0);
+    this->write(RH_RF95_REG_0E_FIFO_TX_BASE_ADDR, 0);
+    this->write(RH_RF95_REG_0F_FIFO_RX_BASE_ADDR, 0);
 
     // Packet format is preamble + explicit-header + payload + crc
     // Explicit Header Mode
@@ -76,7 +76,7 @@ template <typename T>
 void RH_RF95<T>::handleInterrupt()
 {
     // Read the interrupt register
-    uint8_t irq_flags = read(RH_RF95_REG_12_IRQ_FLAGS);
+    uint8_t irq_flags = this->read(RH_RF95_REG_12_IRQ_FLAGS);
     if (this->_mode == RHGenericDriver::RHModeRx && irq_flags & (RH_RF95_RX_TIMEOUT | RH_RF95_PAYLOAD_CRC_ERROR))
     {
         this->_rxBad++;
@@ -84,18 +84,18 @@ void RH_RF95<T>::handleInterrupt()
     else if (this->_mode == RHGenericDriver::RHModeRx && irq_flags & RH_RF95_RX_DONE)
     {
         // Have received a packet
-        uint8_t len = read(RH_RF95_REG_13_RX_NB_BYTES);
+        uint8_t len = this->read(RH_RF95_REG_13_RX_NB_BYTES);
 
-        // Reset the fifo read ptr to the beginning of the packet
-        write(RH_RF95_REG_0D_FIFO_ADDR_PTR, read(RH_RF95_REG_10_FIFO_RX_CURRENT_ADDR));
-        burstRead(RH_RF95_REG_00_FIFO, _buf, len);
+        // Reset the fifo this->read ptr to the beginning of the packet
+        this->write(RH_RF95_REG_0D_FIFO_ADDR_PTR, this->read(RH_RF95_REG_10_FIFO_RX_CURRENT_ADDR));
+        this->burstRead(RH_RF95_REG_00_FIFO, _buf, len);
         _bufLen = len;
-        write(RH_RF95_REG_12_IRQ_FLAGS, 0xff); // Clear all IRQ flags
+        this->write(RH_RF95_REG_12_IRQ_FLAGS, 0xff); // Clear all IRQ flags
 
         // Remember the RSSI of this packet
         // this is according to the doc, but is it really correct?
         // weakest receiveable signals are reported RSSI at about -66
-        this->_lastRssi = read(RH_RF95_REG_1A_PKT_RSSI_VALUE) - 137;
+        this->_lastRssi = this->read(RH_RF95_REG_1A_PKT_RSSI_VALUE) - 137;
 
         // We have received a message.
         validateRxBuf(); 
@@ -107,7 +107,7 @@ void RH_RF95<T>::handleInterrupt()
         setModeIdle();
     }
     
-    write(RH_RF95_REG_12_IRQ_FLAGS, 0xff); // Clear all IRQ flags
+    this->write(RH_RF95_REG_12_IRQ_FLAGS, 0xff); // Clear all IRQ flags
 }
 
 // Check whether the latest received message is complete and uncorrupted
@@ -134,9 +134,9 @@ void RH_RF95<T>::validateRxBuf()
 template <typename T>
 bool RH_RF95<T>::available()
 {
-    if (uartAvailable())
+    if (this->uartAvailable())
     {
-        if (uartRead() == 'I')
+        if (this->uartRead() == 'I')
         {
             handleInterrupt();
         }
@@ -178,26 +178,26 @@ bool RH_RF95<T>::send(uint8_t* data, uint8_t len)
     if (len > RH_RF95_MAX_MESSAGE_LEN)
 	return false;
 
-    waitPacketSent(); // Make sure we dont interrupt an outgoing message
+    this->waitPacketSent(); // Make sure we dont interrupt an outgoing message
     setModeIdle();
 
     // Position at the beginning of the FIFO
-    write(RH_RF95_REG_0D_FIFO_ADDR_PTR, 0);
+    this->write(RH_RF95_REG_0D_FIFO_ADDR_PTR, 0);
     
     // The headers
-    write(RH_RF95_REG_00_FIFO, this->_txHeaderTo);
-    write(RH_RF95_REG_00_FIFO, this->_txHeaderFrom);
-    write(RH_RF95_REG_00_FIFO, this->_txHeaderId);
-    write(RH_RF95_REG_00_FIFO, this->_txHeaderFlags);
+    this->write(RH_RF95_REG_00_FIFO, this->_txHeaderTo);
+    this->write(RH_RF95_REG_00_FIFO, this->_txHeaderFrom);
+    this->write(RH_RF95_REG_00_FIFO, this->_txHeaderId);
+    this->write(RH_RF95_REG_00_FIFO, this->_txHeaderFlags);
     
     // The message data
-    burstWrite(RH_RF95_REG_00_FIFO, data, len);
-    write(RH_RF95_REG_22_PAYLOAD_LENGTH, len + RH_RF95_HEADER_LEN);
+    this->burstWrite(RH_RF95_REG_00_FIFO, data, len);
+    this->write(RH_RF95_REG_22_PAYLOAD_LENGTH, len + RH_RF95_HEADER_LEN);
 
     setModeTx(); // Start the transmitter
     // when Tx is done, interruptHandler will fire and radio mode will return to STANDBY
     
-    //write(RH_RF95_REG_12_IRQ_FLAGS, 0xff); // Clear all IRQ flags
+    //this->write(RH_RF95_REG_12_IRQ_FLAGS, 0xff); // Clear all IRQ flags
     return true;
 }
 
@@ -213,7 +213,7 @@ bool RH_RF95<T>::printRegisters()
     {
         Serial.print(registers[i], HEX);
         Serial.print(": ");
-        Serial.println(read(registers[i]), HEX);
+        Serial.println(this->read(registers[i]), HEX);
     }
 #endif
     return true;
@@ -232,9 +232,9 @@ bool RH_RF95<T>::setFrequency(float centre)
 {
     // Frf = FRF / FSTEP
     uint32_t frf = (centre * 1000000.0) / RH_RF95_FSTEP;
-    write(RH_RF95_REG_06_FRF_MSB, (frf >> 16) & 0xff);
-    write(RH_RF95_REG_07_FRF_MID, (frf >> 8) & 0xff);
-    write(RH_RF95_REG_08_FRF_LSB, frf & 0xff);
+    this->write(RH_RF95_REG_06_FRF_MSB, (frf >> 16) & 0xff);
+    this->write(RH_RF95_REG_07_FRF_MID, (frf >> 8) & 0xff);
+    this->write(RH_RF95_REG_08_FRF_LSB, frf & 0xff);
 
     return true;
 }
@@ -245,7 +245,7 @@ void RH_RF95<T>::setModeIdle()
 {
     if (this->_mode != RHGenericDriver::RHModeIdle)
     {
-        write(RH_RF95_REG_01_OP_MODE, RH_RF95_MODE_STDBY);
+        this->write(RH_RF95_REG_01_OP_MODE, RH_RF95_MODE_STDBY);
         this->_mode = RHGenericDriver::RHModeIdle;
     }
 }
@@ -256,7 +256,7 @@ bool RH_RF95<T>::sleep()
 {
     if (this->_mode != RHGenericDriver::RHModeSleep)
     {
-        write(RH_RF95_REG_01_OP_MODE, RH_RF95_MODE_SLEEP);
+        this->write(RH_RF95_REG_01_OP_MODE, RH_RF95_MODE_SLEEP);
         this->_mode = RHGenericDriver::RHModeSleep;
     }
     return true;
@@ -268,8 +268,8 @@ void RH_RF95<T>::setModeRx()
 {
     if (this->_mode != RHGenericDriver::RHModeRx)
     {
-        write(RH_RF95_REG_01_OP_MODE, RH_RF95_MODE_RXCONTINUOUS);
-        write(RH_RF95_REG_40_DIO_MAPPING1, 0x00); // Interrupt on RxDone
+        this->write(RH_RF95_REG_01_OP_MODE, RH_RF95_MODE_RXCONTINUOUS);
+        this->write(RH_RF95_REG_40_DIO_MAPPING1, 0x00); // Interrupt on RxDone
         this->_mode = RHGenericDriver::RHModeRx;
     }
 }
@@ -280,8 +280,8 @@ void RH_RF95<T>::setModeTx()
 {
     if (this->_mode != RHGenericDriver::RHModeTx)
     {
-        write(RH_RF95_REG_01_OP_MODE, RH_RF95_MODE_TX);
-        write(RH_RF95_REG_40_DIO_MAPPING1, 0x40); // Interrupt on TxDone
+        this->write(RH_RF95_REG_01_OP_MODE, RH_RF95_MODE_TX);
+        this->write(RH_RF95_REG_40_DIO_MAPPING1, 0x40); // Interrupt on TxDone
         this->_mode = RHGenericDriver::RHModeTx;
     }
 }
@@ -296,7 +296,7 @@ void RH_RF95<T>::setTxPower(int8_t power, bool useRFO)
     {
         if (power > 14)power = 14;
         if (power < -1)power = -1;
-        write(RH_RF95_REG_09_PA_CONFIG, RH_RF95_MAX_POWER | (power + 1));
+        this->write(RH_RF95_REG_09_PA_CONFIG, RH_RF95_MAX_POWER | (power + 1));
     }
     else
     {
@@ -308,12 +308,12 @@ void RH_RF95<T>::setTxPower(int8_t power, bool useRFO)
         // for 21 and 23dBm
         if (power > 20)
         {
-            write(RH_RF95_REG_4D_PA_DAC, RH_RF95_PA_DAC_ENABLE);
+            this->write(RH_RF95_REG_4D_PA_DAC, RH_RF95_PA_DAC_ENABLE);
             power -= 3;
         }
         else
         {
-            write(RH_RF95_REG_4D_PA_DAC, RH_RF95_PA_DAC_DISABLE);
+            this->write(RH_RF95_REG_4D_PA_DAC, RH_RF95_PA_DAC_DISABLE);
         }
 
         // RFM95/96/97/98 does not have RFO pins connected to anything. Only PA_BOOST
@@ -322,7 +322,7 @@ void RH_RF95<T>::setTxPower(int8_t power, bool useRFO)
         // The documentation is pretty confusing on this topic: PaSelect says the max power is 20dBm,
         // but OutputPower claims it would be 17dBm.
         // My measurements show 20dBm is correct
-        write(RH_RF95_REG_09_PA_CONFIG, RH_RF95_PA_SELECT | (power-5));
+        this->write(RH_RF95_REG_09_PA_CONFIG, RH_RF95_PA_SELECT | (power-5));
     }
 }
 
@@ -330,9 +330,9 @@ void RH_RF95<T>::setTxPower(int8_t power, bool useRFO)
 template <typename T>
 void RH_RF95<T>::setModemRegisters(const ModemConfig* config)
 {
-    write(RH_RF95_REG_1D_MODEM_CONFIG1, config->reg_1d);
-    write(RH_RF95_REG_1E_MODEM_CONFIG2, config->reg_1e);
-    write(RH_RF95_REG_26_MODEM_CONFIG3, config->reg_26);
+    this->write(RH_RF95_REG_1D_MODEM_CONFIG1, config->reg_1d);
+    this->write(RH_RF95_REG_1E_MODEM_CONFIG2, config->reg_1e);
+    this->write(RH_RF95_REG_26_MODEM_CONFIG3, config->reg_26);
 }
 
 // Set one of the canned FSK Modem configs
@@ -352,8 +352,8 @@ bool RH_RF95<T>::setModemConfig(ModemConfigChoice index)
 template <typename T>
 void RH_RF95<T>::setPreambleLength(uint16_t bytes)
 {
-    write(RH_RF95_REG_20_PREAMBLE_MSB, bytes >> 8);
-    write(RH_RF95_REG_21_PREAMBLE_LSB, bytes & 0xff);
+    this->write(RH_RF95_REG_20_PREAMBLE_MSB, bytes >> 8);
+    this->write(RH_RF95_REG_21_PREAMBLE_LSB, bytes & 0xff);
 }
 
 #ifdef ARDUINO_SAMD_VARIANT_COMPLIANCE
