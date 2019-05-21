@@ -30,32 +30,36 @@
 
 #include <RHUartDriver.h>
 
-
-RHUartDriver::RHUartDriver(SoftwareSerial& ss)
+template <typename T>
+RHUartDriver<T>::RHUartDriver(T& ss)
     :
     _ss(ss)
 {
 }
 
-bool RHUartDriver::init()
+template <typename T>
+bool RHUartDriver<T>::init()
 {
     _ss.begin(57600);
-    _ss.listen();
+ //   _ss.listen();
     
     return true;
 }
 
-uint8_t RHUartDriver::uartAvailable(void)
+template <typename T>
+uint8_t RHUartDriver<T>::uartAvailable(void)
 {
     return _ss.available();    
 }
 
-uint8_t RHUartDriver::uartRead(void)
+template <typename T>
+uint8_t RHUartDriver<T>::uartRead(void)
 {
     return _ss.read();    
 }
 
-void RHUartDriver::uartTx(uint8_t reg, uint8_t* src, uint8_t len)
+template <typename T>
+void RHUartDriver<T>::uartTx(uint8_t reg, uint8_t* src, uint8_t len)
 {    
     _ss.write('W');
     _ss.write(reg);
@@ -63,7 +67,8 @@ void RHUartDriver::uartTx(uint8_t reg, uint8_t* src, uint8_t len)
     for(int i = 0; i < len; i ++)_ss.write(*(src + i));
 }
     
-void RHUartDriver::uartRx(uint8_t reg, uint8_t* dest, uint8_t len)
+template <typename T>
+void RHUartDriver<T>::uartRx(uint8_t reg, uint8_t* dest, uint8_t len)
 {   
     _ss.write('R');
     _ss.write(reg);
@@ -85,25 +90,40 @@ void RHUartDriver::uartRx(uint8_t reg, uint8_t* dest, uint8_t len)
         if(timerEnd - timerStart > 1000 * DEFAULT_TIMEOUT) break;
     }  
 }
-    
-uint8_t RHUartDriver::read(uint8_t reg)
+
+template <typename T>  
+uint8_t RHUartDriver<T>::read(uint8_t reg)
 {
     uint8_t val = 0;
     uartRx(reg & ~RH_WRITE_MASK, &val, 1);
     return val;
 }
 
-void RHUartDriver::write(uint8_t reg, uint8_t val)
+template <typename T>
+void RHUartDriver<T>::write(uint8_t reg, uint8_t val)
 {
     uartTx(reg | RH_WRITE_MASK, &val, 1);
 }
 
-void RHUartDriver::burstRead(uint8_t reg, uint8_t* dest, uint8_t len)
+template <typename T>
+void RHUartDriver<T>::burstRead(uint8_t reg, uint8_t* dest, uint8_t len)
 {
     uartRx(reg & ~RH_WRITE_MASK, dest, len);
 }
 
-void RHUartDriver::burstWrite(uint8_t reg, uint8_t* src, uint8_t len)
+template <typename T>
+void RHUartDriver<T>::burstWrite(uint8_t reg, uint8_t* src, uint8_t len)
 {
     uartTx(reg | RH_WRITE_MASK, src, len);
 }
+
+
+#ifdef ARDUINO_SAMD_VARIANT_COMPLIANCE
+template class RHUartDriver<Uart>;
+#endif
+template class RHUartDriver<HardwareSerial>;
+
+#ifdef __AVR__
+#include <SoftwareSerial.h>
+template class RHUartDriver<SoftwareSerial>;
+#endif

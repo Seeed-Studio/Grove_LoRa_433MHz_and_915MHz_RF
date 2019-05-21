@@ -34,19 +34,18 @@
 
 #include <Arduino.h>
 #include <RHGenericDriver.h>
-#include <SoftwareSerial.h>
 
 
 #define DEFAULT_TIMEOUT 3
 
 #define RH_WRITE_MASK 0x80
 
-
+template<typename T>
 class RHUartDriver : public RHGenericDriver
 {
 public:
 
-    RHUartDriver(SoftwareSerial& ss);
+    RHUartDriver(T& ss);
     
     virtual bool init();
     
@@ -70,7 +69,7 @@ public:
 
 protected:
 
-    SoftwareSerial& _ss;
+    T& _ss;
 
 private:
 
