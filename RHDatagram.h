@@ -17,7 +17,7 @@
 /// \brief Manager class for addressed, unreliable messages
 ///
 /// Every RHDatagram node has an 8 bit address (defaults to 0).
-/// Addresses (DEST and SRC) are 8 bit integers with an address of RH_BROADCAST_ADDRESS (0xff) 
+/// Addresses (DEST and SRC) are 8 bit integers with an address of RH_BROADCAST_ADDRESS (0xff)
 /// reserved for broadcast.
 ///
 /// \par Media Access Strategy
@@ -27,10 +27,10 @@
 /// \par Message Lengths
 ///
 /// Not all Radio drivers supported by RadioHead can handle the same message lengths. Some radios can handle
-/// up to 255 octets, and some as few as 28. If you attempt to send a message that is too long for 
-/// the underlying driver, sendTo() will return false and will not transmit the message. 
+/// up to 255 octets, and some as few as 28. If you attempt to send a message that is too long for
+/// the underlying driver, sendTo() will return false and will not transmit the message.
 /// It is the programmers responsibility to make
-/// sure that messages passed to sendto() do not exceed the capability of the radio. You can use the 
+/// sure that messages passed to sendto() do not exceed the capability of the radio. You can use the
 /// *_MAX_MESSAGE_LENGTH definitions or driver->maxMessageLength() to help.
 ///
 /// \par Headers
@@ -42,21 +42,20 @@
 /// \b FLAGS A bitmask of flags. The most significant 4 bits are reserved for use by RadioHead. The least
 /// significant 4 bits are reserved for applications.<br>
 ///
-class RHDatagram
-{
-public:
-    /// Constructor. 
+class RHDatagram {
+  public:
+    /// Constructor.
     /// \param[in] driver The RadioHead driver to use to transport messages.
     /// \param[in] thisAddress The address to assign to this node. Defaults to 0
     RHDatagram(RHGenericDriver& driver, uint8_t thisAddress = 0);
 
-    /// Initialise this instance and the 
+    /// Initialise this instance and the
     /// driver connected to it.
     bool init();
 
-    /// Sets the address of this node. Defaults to 0. 
+    /// Sets the address of this node. Defaults to 0.
     /// This will be used to set the FROM address of all messages sent by this node.
-    /// In a conventional multinode system, all nodes will have a unique address 
+    /// In a conventional multinode system, all nodes will have a unique address
     /// (which you could store in EEPROM).
     /// \param[in] thisAddress The address of this node
     void setThisAddress(uint8_t thisAddress);
@@ -85,7 +84,8 @@ public:
     /// \param[in] flags If present and not NULL, the referenced uint8_t will be set to the FLAGS
     /// (not just those addressed to this node).
     /// \return true if a valid message was copied to buf
-    bool recvfrom(uint8_t* buf, uint8_t* len, uint8_t* from = NULL, uint8_t* to = NULL, uint8_t* id = NULL, uint8_t* flags = NULL);
+    bool recvfrom(uint8_t* buf, uint8_t* len, uint8_t* from = NULL, uint8_t* to = NULL, uint8_t* id = NULL,
+                  uint8_t* flags = NULL);
 
     /// Tests whether a new message is available
     /// from the Driver.
@@ -95,11 +95,11 @@ public:
     /// \return true if a new, complete, error-free uncollected message is available to be retreived by recv()
     bool available();
 
-    /// Starts the Driver receiver and blocks until a valid received 
+    /// Starts the Driver receiver and blocks until a valid received
     /// message is available.
     void waitAvailable();
 
-    /// Blocks until the transmitter 
+    /// Blocks until the transmitter
     /// is no longer transmitting.
     bool waitPacketSent();
 
@@ -151,7 +151,7 @@ public:
     /// \return The address of this node
     uint8_t thisAddress();
 
-protected:
+  protected:
     /// The Driver we are to use
     RHGenericDriver& _driver;
 

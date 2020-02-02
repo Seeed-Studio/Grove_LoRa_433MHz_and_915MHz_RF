@@ -26,9 +26,8 @@ extern long random(long from, long to);
 
 // Equavalent to HardwareSerial in Arduino
 // but outputs to stdout
-class SerialSimulator
-{
-public:
+class SerialSimulator {
+  public:
 #define DEC 10
 #define HEX 16
 #define OCT 8
@@ -37,43 +36,38 @@ public:
     // TODO: move these from being inlined
     void begin(int baud) {}
 
-    size_t println(const char* s)
-    {
-	print(s);
-	return printf("\n");
+    size_t println(const char* s) {
+        print(s);
+        return printf("\n");
     }
-    size_t print(const char* s)
-    {
-	return printf("%s", s); // This style prevent warnings from [-Wformat-security]
+    size_t print(const char* s) {
+        return printf("%s", s); // This style prevent warnings from [-Wformat-security]
     }
-    size_t print(unsigned int n, int base = DEC)
-    {
-	if (base == DEC)
-	    return printf("%d", n);
-	else if (base == HEX)
-	    return printf("%02x", n);
-	else if (base == OCT)
-	    return printf("%o", n);
-	// TODO: BIN
-	else
-	    return 0;
+    size_t print(unsigned int n, int base = DEC) {
+        if (base == DEC) {
+            return printf("%d", n);
+        } else if (base == HEX) {
+            return printf("%02x", n);
+        } else if (base == OCT) {
+            return printf("%o", n);
+        }
+        // TODO: BIN
+        else {
+            return 0;
+        }
     }
-    size_t print(char ch)
-    {
+    size_t print(char ch) {
         return printf("%c", ch);
     }
-    size_t println(char ch)
-    {
+    size_t println(char ch) {
         return printf("%c\n", ch);
     }
-    size_t print(unsigned char ch, int base = DEC)
-    {
-	return print((unsigned int)ch, base);
+    size_t print(unsigned char ch, int base = DEC) {
+        return print((unsigned int)ch, base);
     }
-    size_t println(unsigned char ch, int base = DEC)
-    {
-	print((unsigned int)ch, base);
-	return printf("\n");
+    size_t println(unsigned char ch, int base = DEC) {
+        print((unsigned int)ch, base);
+        return printf("\n");
     }
 
 };

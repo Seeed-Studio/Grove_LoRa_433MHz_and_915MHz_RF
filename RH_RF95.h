@@ -20,11 +20,11 @@
 // The headers are inside the LORA's payload
 #define RH_RF95_HEADER_LEN 4
 
-// This is the maximum message length that can be supported by this driver. 
+// This is the maximum message length that can be supported by this driver.
 // Can be pre-defined to a smaller size (to save SRAM) prior to including this header
 // Here we allow for 1 byte message length, 4 bytes headers, user data and 2 bytes of FCS
 #ifndef RH_RF95_MAX_MESSAGE_LEN
- #define RH_RF95_MAX_MESSAGE_LEN (RH_RF95_MAX_PAYLOAD_LEN - RH_RF95_HEADER_LEN)
+    #define RH_RF95_MAX_MESSAGE_LEN (RH_RF95_MAX_PAYLOAD_LEN - RH_RF95_HEADER_LEN)
 #endif
 
 // The crystal oscillator frequency of the module
@@ -200,34 +200,31 @@
 #define RH_RF95_PA_DAC_DISABLE                        0x04
 #define RH_RF95_PA_DAC_ENABLE                         0x07
 
-    /// Defines register values for a set of modem configuration registers
-    /// that can be passed to setModemRegisters() if none of the choices in
-    /// ModemConfigChoice suit your need setModemRegisters() writes the
-    /// register values from this structure to the appropriate registers
-    /// to set the desired spreading factor, coding rate and bandwidth
-    typedef struct
-    {
-        uint8_t    reg_1d;   ///< Value for register RH_RF95_REG_1D_MODEM_CONFIG1
-        uint8_t    reg_1e;   ///< Value for register RH_RF95_REG_1E_MODEM_CONFIG2
-        uint8_t    reg_26;   ///< Value for register RH_RF95_REG_26_MODEM_CONFIG3
-    } ModemConfig;
-    
+/// Defines register values for a set of modem configuration registers
+/// that can be passed to setModemRegisters() if none of the choices in
+/// ModemConfigChoice suit your need setModemRegisters() writes the
+/// register values from this structure to the appropriate registers
+/// to set the desired spreading factor, coding rate and bandwidth
+typedef struct {
+    uint8_t    reg_1d;   ///< Value for register RH_RF95_REG_1D_MODEM_CONFIG1
+    uint8_t    reg_1e;   ///< Value for register RH_RF95_REG_1E_MODEM_CONFIG2
+    uint8_t    reg_26;   ///< Value for register RH_RF95_REG_26_MODEM_CONFIG3
+} ModemConfig;
+
 template<typename T>
-class RH_RF95 : public RHUartDriver<T>
-{
-public:
+class RH_RF95 : public RHUartDriver<T> {
+  public:
 
 
     /// Choices for setModemConfig() for a selected subset of common
     /// data rates. If you need another configuration,
     /// determine the necessary settings and call setModemRegisters() with your
-    /// desired settings. It might be helpful to use the LoRa calculator mentioned in 
+    /// desired settings. It might be helpful to use the LoRa calculator mentioned in
     /// http://www.semtech.com/images/datasheet/LoraDesignGuide_STD.pdf
     /// These are indexes into MODEM_CONFIG_TABLE. We strongly recommend you use these symbolic
     /// definitions and not their integer equivalents: its possible that new values will be
     /// introduced in later versions (though we will try to avoid it).
-    typedef enum
-    {
+    typedef enum {
         Bw125Cr45Sf128 = 0,	   ///< Bw = 125 kHz, Cr = 4/5, Sf = 128chips/symbol, CRC on. Default medium range
         Bw500Cr45Sf128,	           ///< Bw = 500 kHz, Cr = 4/5, Sf = 128chips/symbol, CRC on. Fast+short range
         Bw31_25Cr48Sf512,	   ///< Bw = 31.25 kHz, Cr = 4/8, Sf = 512chips/symbol, CRC on. Slow+long range
@@ -235,7 +232,7 @@ public:
     } ModemConfigChoice;
 
     RH_RF95(T& ss);
-  
+
     /// Initialise the Driver transport hardware and software.
     /// Make sure the Driver is properly configured before calling init().
     /// \return true if initialisation succeeded.
@@ -247,20 +244,20 @@ public:
     /// \return true on success
     bool printRegisters();
 
-    /// Sets all the registered required to configure the data modem in the RF95/96/97/98, including the bandwidth, 
-    /// spreading factor etc. You can use this to configure the modem with custom configurations if none of the 
+    /// Sets all the registered required to configure the data modem in the RF95/96/97/98, including the bandwidth,
+    /// spreading factor etc. You can use this to configure the modem with custom configurations if none of the
     /// canned configurations in ModemConfigChoice suit you.
     /// \param[in] config A ModemConfig structure containing values for the modem configuration registers.
     void setModemRegisters(const ModemConfig* config);
 
-    /// Select one of the predefined modem configurations. If you need a modem configuration not provided 
+    /// Select one of the predefined modem configurations. If you need a modem configuration not provided
     /// here, use setModemRegisters() with your own ModemConfig.
     /// \param[in] index The configuration choice.
     /// \return true if index is a valid choice.
     bool setModemConfig(ModemConfigChoice index);
 
     /// Tests whether a new message is available
-    /// from the Driver. 
+    /// from the Driver.
     /// On most drivers, this will also put the Driver into RHModeRx mode until
     /// a message is actually received by the transport, when it wil be returned to RHModeIdle.
     /// This can be called multiple times in a timeout loop
@@ -280,37 +277,37 @@ public:
 
     /// Waits until any previous transmit packet is finished being transmitted with waitPacketSent().
     /// Then loads a message into the transmitter and starts the transmitter. Note that a message length
-    /// of 0 is permitted. 
+    /// of 0 is permitted.
     /// \param[in] data Array of data to be sent
     /// \param[in] len Number of bytes of data to send
     /// \return true if the message length was valid and it was correctly queued for transmit
     virtual bool send(uint8_t* data, uint8_t len);
 
     /// Sets the length of the preamble
-    /// in bytes. 
-    /// Caution: this should be set to the same 
+    /// in bytes.
+    /// Caution: this should be set to the same
     /// value on all nodes in your network. Default is 8.
     /// Sets the message preamble length in RH_RF95_REG_??_PREAMBLE_?SB
-    /// \param[in] bytes Preamble length in bytes.  
+    /// \param[in] bytes Preamble length in bytes.
     void setPreambleLength(uint16_t bytes);
 
-    /// Returns the maximum message length 
+    /// Returns the maximum message length
     /// available in this Driver.
     /// \return The maximum legal message length
     virtual uint8_t maxMessageLength();
 
-    /// Sets the transmitter and receiver 
+    /// Sets the transmitter and receiver
     /// centre frequency.
     /// \param[in] centre Frequency in MHz. 137.0 to 1020.0. Caution: RFM95/96/97/98 comes in several
     /// different frequency ranges, and setting a frequency outside that range of your radio will probably not work
     /// \return true if the selected frquency centre is within range
     bool setFrequency(float centre);
 
-    /// If current mode is Rx or Tx changes it to Idle. If the transmitter or receiver is running, 
+    /// If current mode is Rx or Tx changes it to Idle. If the transmitter or receiver is running,
     /// disables them.
     void setModeIdle();
 
-    /// If current mode is Tx or Idle, changes it to Rx. 
+    /// If current mode is Tx or Idle, changes it to Rx.
     /// Starts the receiver in the RF95/96/97/98.
     void setModeRx();
 
@@ -320,35 +317,35 @@ public:
 
     /// Sets the transmitter power output level, and configures the transmitter pin.
     /// Be a good neighbour and set the lowest power level you need.
-    /// Some SX1276/77/78/79 and compatible modules (such as RFM95/96/97/98) 
+    /// Some SX1276/77/78/79 and compatible modules (such as RFM95/96/97/98)
     /// use the PA_BOOST transmitter pin for high power output (and optionally the PA_DAC)
-    /// while some (such as the Modtronix inAir4 and inAir9) 
+    /// while some (such as the Modtronix inAir4 and inAir9)
     /// use the RFO transmitter pin for lower power but higher efficiency.
     /// You must set the appropriate power level and useRFO argument for your module.
     /// Check with your module manufacturer which transmtter pin is used on your module
-    /// to ensure you are setting useRFO correctly. 
-    /// Failure to do so will result in very low 
+    /// to ensure you are setting useRFO correctly.
+    /// Failure to do so will result in very low
     /// transmitter power output.
     /// Caution: legal power limits may apply in certain countries.
     /// After init(), the power will be set to 13dBm, with useRFO false (ie PA_BOOST enabled).
-    /// \param[in] power Transmitter power level in dBm. For RFM95/96/97/98 LORA with useRFO false, 
+    /// \param[in] power Transmitter power level in dBm. For RFM95/96/97/98 LORA with useRFO false,
     /// valid values are from +5 to +23.
-    /// For Modtronix inAir4 and inAir9 with useRFO true (ie RFO pins in use), 
+    /// For Modtronix inAir4 and inAir9 with useRFO true (ie RFO pins in use),
     /// valid values are from -1 to 14.
     /// \param[in] useRFO If true, enables the use of the RFO transmitter pins instead of
     /// the PA_BOOST pin (false). Choose the correct setting for your module.
     void setTxPower(int8_t power, bool useRFO = false);
 
     /// Sets the radio into low-power sleep mode.
-    /// If successful, the transport will stay in sleep mode until woken by 
+    /// If successful, the transport will stay in sleep mode until woken by
     /// changing mode it idle, transmit or receive (eg by calling send(), recv(), available() etc)
     /// Caution: there is a time penalty as the radio takes a finite time to wake from sleep mode.
     /// \return true if sleep mode was successfully entered.
     virtual bool sleep();
-    
 
-    
-protected:
+
+
+  protected:
     /// This is a low level function to handle the interrupts for one instance of RH_RF95.
     /// Called automatically by isr*()
     /// Should not need to be called by user code.
@@ -360,10 +357,10 @@ protected:
     /// Clear our local receive buffer
     void clearRxBuf();
 
-private:
+  private:
     /// Number of octets in the buffer
     volatile uint8_t    _bufLen;
-    
+
     /// The receiver/transmitter buffer
     uint8_t             _buf[RH_RF95_MAX_PAYLOAD_LEN];
 

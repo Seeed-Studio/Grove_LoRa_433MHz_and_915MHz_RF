@@ -24,10 +24,11 @@ RH_RF95 driver(ss);
 // Class to manage message delivery and receipt, using the driver declared above
 RHRouter manager(driver, ROUTER2_ADDRESS);
 
-void setup() 
-{
+void setup() {
     Serial.begin(9600);
-    if(!manager.init())Serial.println("init failed");
+    if (!manager.init()) {
+        Serial.println("init failed");
+    }
     // Defaults after init are 434.0MHz, 0.05MHz AFC pull-in, modulation FSK_Rb2_4Fd36
 
     // Manually define the routes for this network
@@ -41,57 +42,51 @@ uint8_t back[] = "And hello back to you from router 2";
 // Dont put this on the stack:
 uint8_t buf[RH_ROUTER_MAX_MESSAGE_LEN];
 
-void loop()
-{
+void loop() {
     char addr;
     uint8_t len = sizeof(buf);
     uint8_t from;
-    
-    if(Serial.available())
-    {
+
+    if (Serial.available()) {
         addr = Serial.read();
     }
-    
-    if(addr > '0' && addr <= '4')
-    {
+
+    if (addr > '0' && addr <= '4') {
         // Send a message to a router
         // It will be routed by the intermediate
         // nodes to the destination node, accorinding to the
         // routing tables in each node
         Serial.print("Send message to router ");
         Serial.println(addr - '0');
-        if(manager.sendtoWait(data, sizeof(data), addr - '0') == RH_ROUTER_ERROR_NONE)
-        {
+        if (manager.sendtoWait(data, sizeof(data), addr - '0') == RH_ROUTER_ERROR_NONE) {
             // It has been reliably delivered to the next node.
             // Now wait for a reply from the ultimate router
             memset(buf, 0, len);
-            if(manager.recvfromAckTimeout(buf, &len, 3000, &from))
-            {
+            if (manager.recvfromAckTimeout(buf, &len, 3000, &from)) {
                 Serial.print("got reply from : 0x");
                 Serial.print(from, HEX);
                 Serial.print(": ");
                 Serial.println((char*)buf);
-            }
-            else
-            {
+            } else {
                 Serial.println("No reply, are routers running?");
             }
+        } else {
+            Serial.println("sendtoWait failed. Are the intermediate routers running?");
         }
-        else Serial.println("sendtoWait failed. Are the intermediate routers running?");
 
-        addr = 0;     
+        addr = 0;
     }
 
     memset(buf, 0, len);
-    if(manager.recvfromAck(buf, &len, &from))
-    {
+    if (manager.recvfromAck(buf, &len, &from)) {
         Serial.print("got message from : 0x");
         Serial.print(from, HEX);
         Serial.print(": ");
         Serial.println((char*)buf);
-        
+
         // Send a reply back to the originator router
-        if(manager.sendtoWait(back, sizeof(back), from) != RH_ROUTER_ERROR_NONE)
-        Serial.println("sendtoWait failed");
+        if (manager.sendtoWait(back, sizeof(back), from) != RH_ROUTER_ERROR_NONE) {
+            Serial.println("sendtoWait failed");
+        }
     }
 }

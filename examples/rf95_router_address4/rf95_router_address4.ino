@@ -7,26 +7,26 @@
 #include <RHRouter.h>
 #include <RH_RF95.h>
 #ifdef __AVR__
-#include <SoftwareSerial.h>
-SoftwareSerial SSerial(10, 11); // RX, TX
-#define COMSerial SSerial
-#define ShowSerial Serial 
+    #include <SoftwareSerial.h>
+    SoftwareSerial SSerial(10, 11); // RX, TX
+    #define COMSerial SSerial
+    #define ShowSerial Serial
 
-RH_RF95<SoftwareSerial> driver(COMSerial);
+    RH_RF95<SoftwareSerial> driver(COMSerial);
 #endif
 
 #ifdef ARDUINO_SAMD_VARIANT_COMPLIANCE
-#define COMSerial Serial1
-#define ShowSerial SerialUSB 
+    #define COMSerial Serial1
+    #define ShowSerial SerialUSB
 
-RH_RF95<Uart> driver(COMSerial);
+    RH_RF95<Uart> driver(COMSerial);
 #endif
 
 #ifdef ARDUINO_ARCH_STM32F4
-#define COMSerial Serial
-#define ShowSerial SerialUSB 
+    #define COMSerial Serial
+    #define ShowSerial SerialUSB
 
-RH_RF95<HardwareSerial> driver(COMSerial);
+    RH_RF95<HardwareSerial> driver(COMSerial);
 #endif
 // In this small artifical network of 4 nodes,
 // messages are routed via intermediate nodes to their destination
@@ -42,10 +42,11 @@ RH_RF95<HardwareSerial> driver(COMSerial);
 // Class to manage message delivery and receipt, using the driver declared above
 RHRouter manager(driver, ROUTER4_ADDRESS);
 
-void setup() 
-{
+void setup() {
     ShowSerial.begin(9600);
-    if(!manager.init())ShowSerial.println("init failed");
+    if (!manager.init()) {
+        ShowSerial.println("init failed");
+    }
     // Defaults after init are 434.0MHz, 0.05MHz AFC pull-in, modulation FSK_Rb2_4Fd36
 
     // Manually define the routes for this network
@@ -59,57 +60,51 @@ uint8_t back[] = "And hello back to you from router 4";
 // Dont put this on the stack:
 uint8_t buf[RH_ROUTER_MAX_MESSAGE_LEN];
 
-void loop()
-{
+void loop() {
     char addr;
     uint8_t len = sizeof(buf);
     uint8_t from;
-    
-    if(ShowSerial.available())
-    {
+
+    if (ShowSerial.available()) {
         addr = ShowSerial.read();
     }
-    
-    if(addr > '0' && addr <= '4')
-    {
+
+    if (addr > '0' && addr <= '4') {
         // Send a message to a router
         // It will be routed by the intermediate
         // nodes to the destination node, accorinding to the
         // routing tables in each node
         ShowSerial.print("Send message to router ");
         ShowSerial.println(addr - '0');
-        if(manager.sendtoWait(data, sizeof(data), addr - '0') == RH_ROUTER_ERROR_NONE)
-        {
+        if (manager.sendtoWait(data, sizeof(data), addr - '0') == RH_ROUTER_ERROR_NONE) {
             // It has been reliably delivered to the next node.
             // Now wait for a reply from the ultimate router
             memset(buf, 0, len);
-            if(manager.recvfromAckTimeout(buf, &len, 3000, &from))
-            {
+            if (manager.recvfromAckTimeout(buf, &len, 3000, &from)) {
                 ShowSerial.print("got reply from : 0x");
                 ShowSerial.print(from, HEX);
                 ShowSerial.print(": ");
                 ShowSerial.println((char*)buf);
-            }
-            else
-            {
+            } else {
                 ShowSerial.println("No reply, are routers running?");
             }
+        } else {
+            ShowSerial.println("sendtoWait failed. Are the intermediate routers running?");
         }
-        else ShowSerial.println("sendtoWait failed. Are the intermediate routers running?");
 
-        addr = 0;     
+        addr = 0;
     }
 
     memset(buf, 0, len);
-    if(manager.recvfromAck(buf, &len, &from))
-    {
+    if (manager.recvfromAck(buf, &len, &from)) {
         ShowSerial.print("got message from : 0x");
         ShowSerial.print(from, HEX);
         ShowSerial.print(": ");
         ShowSerial.println((char*)buf);
-        
+
         // Send a reply back to the originator router
-        if(manager.sendtoWait(back, sizeof(back), from) != RH_ROUTER_ERROR_NONE)
-        ShowSerial.println("sendtoWait failed");
+        if (manager.sendtoWait(back, sizeof(back), from) != RH_ROUTER_ERROR_NONE) {
+            ShowSerial.println("sendtoWait failed");
+        }
     }
 }
