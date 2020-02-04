@@ -1,4 +1,4 @@
-
+  [![Build Status](https://travis-ci.com/Seeed-Studio/Grove_LoRa_433MHz_and_915MHz_RF.svg?branch=master)](https://travis-ci.com/Seeed-Studio/Grove_LoRa_433MHz_and_915MHz_RF)
 Grove LoRa 433MHz and 915MHz RF
 ===
 
