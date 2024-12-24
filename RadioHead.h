@@ -814,7 +814,8 @@
     #if defined(__arm__)
         #include <RHutil/atomic.h>
     #else
-        #include <util/atomic.h>
+        // #include <util/atomic.h>
+        #include <stdatomic.h>
     #endif
     #define ATOMIC_BLOCK_START     ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
     #define ATOMIC_BLOCK_END }
