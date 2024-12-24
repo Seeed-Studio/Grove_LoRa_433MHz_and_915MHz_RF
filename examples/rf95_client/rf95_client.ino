@@ -9,7 +9,7 @@
 
 #include <RH_RF95.h>
 
-#ifdef __AVR__
+#ifdef __AVR__  
     #include <SoftwareSerial.h>
     SoftwareSerial SSerial(5, 6); // RX, TX
     #define COMSerial SSerial
@@ -18,7 +18,29 @@
     RH_RF95<SoftwareSerial> rf95(COMSerial);
 #endif
 
-#ifdef ARDUINO_SAMD_VARIANT_COMPLIANCE
+#if defined(ARDUINO_ARCH_RP2040) || defined(ARDUINO_ARCH_RP2350) ||  defined(ARDUINO_XIAO_RA4M1) 
+    #include <SoftwareSerial.h>
+    SoftwareSerial SSerial(D7, D6); // RX, TX
+    #define COMSerial SSerial
+    #define ShowSerial Serial
+
+    RH_RF95<SoftwareSerial> rf95(COMSerial);
+#endif
+
+#if  defined(CONFIG_IDF_TARGET_ESP32C3) || defined(CONFIG_IDF_TARGET_ESP32C6) || defined(CONFIG_IDF_TARGET_ESP32S3)
+    #define COMSerial Serial1
+    #define ShowSerial Serial
+
+    RH_RF95<HardwareSerial> rf95(COMSerial);
+#endif
+
+
+#ifdef SEEED_XIAO_M0
+    #define COMSerial Serial1
+    #define ShowSerial Serial
+
+    RH_RF95<Uart> rf95(COMSerial);
+#elif defined(ARDUINO_SAMD_VARIANT_COMPLIANCE)
     #define COMSerial Serial1
     #define ShowSerial SerialUSB
 
@@ -30,6 +52,13 @@
     #define ShowSerial SerialUSB
 
     RH_RF95<HardwareSerial> rf95(COMSerial);
+#endif
+
+#if defined(NRF52840_XXAA)
+    #define COMSerial Serial1
+    #define ShowSerial Serial
+
+    RH_RF95<Uart> rf95(COMSerial);
 #endif
 
 

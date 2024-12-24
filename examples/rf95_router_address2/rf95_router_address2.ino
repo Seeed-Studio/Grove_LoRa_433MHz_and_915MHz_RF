@@ -4,9 +4,61 @@
 // with the RHRouter class.
 // It is designed to work with the other examples rf95_router_address*
 
-#include <SoftwareSerial.h>
+// #include <SoftwareSerial.h>
 #include <RHRouter.h>
 #include <RH_RF95.h>
+
+#ifdef __AVR__  
+    #include <SoftwareSerial.h>
+    SoftwareSerial SSerial(10, 11); // RX, TX
+    #define COMSerial SSerial
+    #define ShowSerial Serial
+
+    RH_RF95<SoftwareSerial> driver(COMSerial);
+#endif
+
+#if defined(ARDUINO_ARCH_RP2040) || defined(ARDUINO_ARCH_RP2350) ||  defined(ARDUINO_XIAO_RA4M1) 
+    #include <SoftwareSerial.h>
+    SoftwareSerial SSerial(D7, D6); // RX, TX
+    #define COMSerial SSerial
+    #define ShowSerial Serial
+
+    RH_RF95<SoftwareSerial> driver(COMSerial);
+#endif
+
+#if  defined(CONFIG_IDF_TARGET_ESP32C3) || defined(CONFIG_IDF_TARGET_ESP32C6) || defined(CONFIG_IDF_TARGET_ESP32S3)
+    #define COMSerial Serial1
+    #define ShowSerial Serial
+
+    RH_RF95<HardwareSerial> driver(COMSerial);
+#endif
+
+
+#ifdef SEEED_XIAO_M0
+    #define COMSerial Serial1
+    #define ShowSerial Serial
+
+    RH_RF95<Uart> driver(COMSerial);
+#elif defined(ARDUINO_SAMD_VARIANT_COMPLIANCE)
+    #define COMSerial Serial1
+    #define ShowSerial SerialUSB
+
+    RH_RF95<Uart> driver(COMSerial);
+#endif
+
+#ifdef ARDUINO_ARCH_STM32F4
+    #define COMSerial Serial
+    #define ShowSerial SerialUSB
+
+    RH_RF95<HardwareSerial> driver(COMSerial);
+#endif
+
+#if defined(NRF52840_XXAA)
+    #define COMSerial Serial1
+    #define ShowSerial Serial
+
+    RH_RF95<Uart> driver(COMSerial);
+#endif
 
 // In this small artifical network of 4 nodes,
 // messages are routed via intermediate nodes to their destination
@@ -17,9 +69,9 @@
 #define ROUTER3_ADDRESS 3
 #define ROUTER4_ADDRESS 4
 
-// Singleton instance of the radio
-SoftwareSerial ss(10, 11);
-RH_RF95 driver(ss);
+// // Singleton instance of the radio
+// SoftwareSerial ss(10, 11);
+// RH_RF95 driver(ss);
 
 // Class to manage message delivery and receipt, using the driver declared above
 RHRouter manager(driver, ROUTER2_ADDRESS);
