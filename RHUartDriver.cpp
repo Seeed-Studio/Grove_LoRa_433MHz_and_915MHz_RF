@@ -28,7 +28,7 @@
     THE SOFTWARE.
 */
 
-#include <RHUartDriver.h>
+#include "RHUartDriver.h"
 
 template <typename T>
 RHUartDriver<T>::RHUartDriver(T& ss)
@@ -112,12 +112,17 @@ void RHUartDriver<T>::burstWrite(uint8_t reg, uint8_t* src, uint8_t len) {
 }
 
 
-#ifdef ARDUINO_SAMD_VARIANT_COMPLIANCE
+#if defined(ARDUINO_SAMD_VARIANT_COMPLIANCE) || defined(NRF52840_XXAA)
     template class RHUartDriver<Uart>;
 #endif
 template class RHUartDriver<HardwareSerial>;
 
 #ifdef __AVR__
+    #include <SoftwareSerial.h>
+    template class RHUartDriver<SoftwareSerial>;
+#endif
+
+#if defined(ARDUINO_ARCH_RP2040) || defined(ARDUINO_ARCH_RP2350) || defined(ARDUINO_XIAO_RA4M1) 
     #include <SoftwareSerial.h>
     template class RHUartDriver<SoftwareSerial>;
 #endif

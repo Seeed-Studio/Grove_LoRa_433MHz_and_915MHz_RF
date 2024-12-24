@@ -1,5 +1,5 @@
 
-#include <RH_RF95.h>
+#include "RH_RF95.h"
 
 
 // These are indexed by the values of ModemConfigChoice
@@ -335,12 +335,19 @@ void RH_RF95<T>::setPreambleLength(uint16_t bytes) {
     this->write(RH_RF95_REG_21_PREAMBLE_LSB, bytes & 0xff);
 }
 
-#ifdef ARDUINO_SAMD_VARIANT_COMPLIANCE
+#if defined(ARDUINO_SAMD_VARIANT_COMPLIANCE) || defined(NRF52840_XXAA)  
     template class RH_RF95<Uart>;
 #endif
+
+
 template class RH_RF95<HardwareSerial>;
 
 #ifdef __AVR__
+    #include <SoftwareSerial.h>
+    template class RH_RF95<SoftwareSerial>;
+#endif
+
+#if defined(ARDUINO_ARCH_RP2040) || defined(ARDUINO_ARCH_RP2350) || defined(ARDUINO_XIAO_RA4M1) 
     #include <SoftwareSerial.h>
     template class RH_RF95<SoftwareSerial>;
 #endif
